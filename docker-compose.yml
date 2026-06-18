@@ -1,0 +1,38 @@
+services:
+  # The PostgreSQL Database Container
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: movies_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Your FastAPI Web Container
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # This maps your local directory to the container so you don't 
+      # have to rebuild the image every time you change a Python file.
+      - .:/app
+      - /app/.venv
+
+# This creates a persistent volume so database data isn't lost if the container stops
+volumes:
+  postgres_data:
