@@ -35,6 +35,7 @@ cp .env.example .env
 
 
 > Open your new `.env` file and set a secure `SECRET_KEY` and `ADMIN_PASSWORD`.
+> Tip: You can quickly generate a cryptographic secret key by running `python -c "import secrets; print(secrets.token_hex(32))"` in your terminal.
 
 
 ***
