@@ -31,18 +31,18 @@ cp .env.example .env
 # Create a new file named `.env` and copy the contents of `.env.example` into it.
 ```
 
-> **Note on Database Routing:** Keep `DATABASE_URL` exactly as it is in the example (`@db:`). The application features environment-aware routing — if you run local `uv` commands on your machine instead of inside Docker, the backend will automatically reroute the connection to `@localhost:` for you.
+> **Note on Database Routing:** Keep `DATABASE_URL` exactly as it is in the example (`@db:`). The application features environment-aware routing - if you run local `uv` commands on your machine instead of inside Docker, the backend will automatically reroute the connection to `@localhost:` for you.
 
 
 > Open your new `.env` file and set a secure `SECRET_KEY` and `ADMIN_PASSWORD`.
-> Tip: You can quickly generate a cryptographic secret key by running `python -c "import secrets; print(secrets.token_hex(32))"` in your terminal.
+> Tip: You can quickly generate a cryptographic secret key by running `python3 -c "import secrets; print(secrets.token_hex(32))"` in your terminal.
 
 
 ***
 
 ## 💻 Running the Application
 
-### Option A — Docker Compose (Recommended)
+### Option A - Docker Compose (Recommended)
 
 Start PostgreSQL and the API, then run migrations and the scraper inside the container:
 
@@ -52,7 +52,7 @@ docker compose exec web uv run alembic upgrade head
 docker compose exec web uv run scrape.py
 ```
 
-### Option B — Local `uv` (Hybrid: API + DB in Docker)
+### Option B - Local `uv` (Hybrid: API + DB in Docker)
 
 Start only the database:
 
