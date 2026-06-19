@@ -1,4 +1,3 @@
-import os
 from dotenv import load_dotenv
 from sqlmodel import SQLModel
 from models import Movie
@@ -69,12 +68,9 @@ def run_migrations_online() -> None:
     #     prefix="sqlalchemy.",
     #     poolclass=pool.NullPool,
     # )
-    db_url = os.getenv("DATABASE_URL")
-    
-    # If we are running Alembic locally, we need to temporarily replace the Docker 'db' 
-    # hostname with 'localhost' so your local terminal can reach the containerized database.
-    if db_url and "@db:" in db_url:
-        db_url = db_url.replace("@db:", "@localhost:")
+    from config import get_database_url
+
+    db_url = get_database_url()
 
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = db_url

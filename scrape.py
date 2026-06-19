@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 import httpx
 from bs4 import BeautifulSoup
@@ -6,16 +5,12 @@ from dotenv import load_dotenv
 from sqlmodel import Session, create_engine, select
 
 # Import the model we created earlier
+from config import get_database_url
 from models import Movie
 
-# Load environment variables
 load_dotenv()
 
-# Setup Database Engine
-db_url = os.getenv("DATABASE_URL")
-# if db_url and "@db:" in db_url:
-#     db_url = db_url.replace("@db:", "@localhost:") # Allow local script to reach Docker DB
-engine = create_engine(db_url)
+engine = create_engine(get_database_url())
 
 def run_scraper():
     print("Starting scraper...")

@@ -1,6 +1,5 @@
 import os
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlmodel import Session, create_engine, select
@@ -8,21 +7,20 @@ import bcrypt
 from jose import JWTError, jwt
 from dotenv import load_dotenv
 
+from config import require_env, get_database_url
 from models import Movie, MovieUpdate
 
 load_dotenv()
 
 # --- Config & Security ---
-SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
+SECRET_KEY = require_env("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-ADMIN_USER = os.getenv("ADMIN_USERNAME", "admin")
-
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+ADMIN_USER = require_env("ADMIN_USERNAME")
+ADMIN_PASSWORD = require_env("ADMIN_PASSWORD")
 
 # --- Database Setup ---
-db_url = os.getenv("DATABASE_URL")
-engine = create_engine(db_url)
+engine = create_engine(get_database_url())
 
 def get_session():
     with Session(engine) as session:
@@ -41,12 +39,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(password_byte_enc, hashed_password_byte_enc)
 
 # Hash the hardcoded admin password securely
-ADMIN_HASH = get_password_hash(os.getenv("ADMIN_PASSWORD", "secret"))
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+ADMIN_HASH = get_password_hash(ADMIN_PASSWORD)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -82,8 +80,12 @@ def health_check():
 @app.post("/auth/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if form_data.username != ADMIN_USER or not verify_password(form_data.password, ADMIN_HASH):
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     access_token = create_access_token(data={"sub": form_data.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -139,7 +141,7 @@ def delete_movie(
     movie = session.get(Movie, movie_id)
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
-        
+
     session.delete(movie)
     session.commit()
     return {"ok": True, "message": "Movie deleted"}
