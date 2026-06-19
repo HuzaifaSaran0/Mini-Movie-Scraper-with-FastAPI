@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Your FastAPI Web Container
+  # FastAPI Web Container
   web:
     build: .
     ports:
@@ -28,8 +28,8 @@ services:
       db:
         condition: service_healthy
     volumes:
-      # This maps your local directory to the container so you don't 
-      # have to rebuild the image every time you change a Python file.
+      # This maps local directory to the container so we don't 
+      # have to rebuild the image every time we change a Python file.
       - .:/app
       - /app/.venv
 
